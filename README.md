@@ -34,3 +34,10 @@ The supported conversion letters are: `d i o u x X e E f g G c s p`. That covers
 A bare `%` that is not part of a recognised specifier lands inside a `literal_segment`. Because printf has no formal escape other than `%%`, we treat `%%` as a literal percent within those segments and reject any other unescaped `%`. So `"100%% done %s"` parses cleanly (the `%%` stays in the literal segment), but `"value %"` and `"%z"` raise `FormatParseError`. If your format strings come from an untrusted source, wrap `parse_format` in a `try/except FormatParseError` and treat the failure as "keep this log line as raw text."
 
 Precision with no digits (`%.s`) is preserved exactly as written: the `precision` field keeps the leading dot. This keeps round-tripping lossless for the raw spec, which matters for pipelines that re-emit the format string.
+
+## Performance
+
+The window keeps a bounded buffer, so `push` is constant time and memory does not
+grow with the length of the stream. `peak` and `trough` are linear in the window
+size, which is the trade that keeps `push` cheap.
+
